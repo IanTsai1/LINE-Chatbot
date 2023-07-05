@@ -20,9 +20,7 @@ dependencies {
 	implementation("com.linecorp.bot:line-bot-api-client:6.0.0")
 	implementation("com.linecorp.bot:line-bot-spring-boot:6.0.0")
 	
-	
-	
-	
+	implementation("com.google.code.gson:gson:2.8.2")
 	
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
