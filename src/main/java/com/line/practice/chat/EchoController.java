@@ -98,7 +98,7 @@ public class EchoController{
 	@EventMapping 
     public void handleAudioMessageEvent(MessageEvent<AudioMessageContent> event) {
 		log.info("Audio Message Event: " + event);
-		//lineMessagingClient.replyMessage(new ReplyMessage(event.getReplyToken(), new TextMessage("I'm in handleAudioMessage"),false));
+		lineMessagingClient.replyMessage(new ReplyMessage(event.getReplyToken(), new TextMessage("Transcribing audio ..."),false));
     	AudioMessageContent message = (AudioMessageContent) event.getMessage();
 		
 		final LineBlobClient client = LineBlobClient
@@ -113,28 +113,19 @@ public class EchoController{
 			
 			messageContentResponse = client.getMessageContent(message.getId()).get();
 		    
-			HttpHeaders id_headers = new HttpHeaders();
-	    	id_headers.setContentType(MediaType.parseMediaType("audio/m4a"));	
+			//tmp save
+		    Path tempFile = Files.createTempFile("UserAudio", ".m4a");
+		    Files.copy(messageContentResponse.getStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+		    String filename = tempFile.getFileName().toString();
+		    
+			HttpHeaders filename_headers = new HttpHeaders();
+	    	filename_headers.setContentType(MediaType.TEXT_PLAIN);	
 	    	
-	    	HttpEntity<InputStreamResource> id_requestEntity = new HttpEntity<>(new InputStreamResource(messageContentResponse.getStream()), id_headers);
-	    	String transcribed_audio = restTemplate.postForObject(audio_url, id_requestEntity, String.class);
-
-	    	 lineMessagingClient.pushMessage(new PushMessage(id, new TextMessage(transcribed_audio),false));
-		    
-		    //assign a variable to send data to port 9090
-		    	//process data in python
-		    //send push of the variable value
-		    
-		    //save in computer
-	    	/*
-		    String currentDir = System.getProperty("user.dir").replace("\\", "/");
-		    Path audioFilePath = Paths.get(currentDir + "/AudioFiles/audio.m4a");
-		    Files.copy(messageContentResponse.getStream(), audioFilePath, StandardCopyOption.REPLACE_EXISTING);
-		    
-		    
-		    //tmp save
-		    Path tempFile = Files.createTempFile("foo", "bar");
-		    Files.copy(messageContentResponse.getStream(), tempFile);*/
+	    	HttpEntity<String> filename_requestEntity = new HttpEntity<>(filename, filename_headers);
+	    	String transcribed_audio = restTemplate.postForObject(audio_url, filename_requestEntity, String.class);
+	
+	    	lineMessagingClient.pushMessage(new PushMessage(id, new TextMessage(transcribed_audio),false));
+		 
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {

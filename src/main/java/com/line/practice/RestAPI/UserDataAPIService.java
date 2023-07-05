@@ -63,12 +63,6 @@ public class UserDataAPIService {
 		return "";
 	}
 	
-	/*
-	@PostMapping("/id") //not sending in json format
-	public String sendId(@RequestBody String id) {
-		System.out.println("I'M IN SEND ID");
-		return "Sent";
-	}*/
 	
 	public void updateOrAddItem(HashSet<UserData> items, String id, String text) {
 	    boolean isExistingItem = false;

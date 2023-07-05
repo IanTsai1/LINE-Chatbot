@@ -15,18 +15,13 @@ def process_data():
     get_text(received_data)
     return ""
 
-@app.route("/getAudio", methods=['POST'])
+@app.route("/getAudio", methods=['POST']) 
 def process_audio():
-    bytes = request.get_data()
-    wav_file = io.BytesIO()
-    with wave.open(wav_file, 'wb') as audio_file:
-        audio_file.setnchannels(1)
-        audio_file.setsampwidth(2)
-        audio_file.setframerate(44100)
-
-        audio_file.writeframes(bytes)
-
-    transcribe = transcribe_audio(wav_file)
+    filename = request.data.decode('utf-8')
+    print()
+    print("filename:" + filename)
+    print()
+    transcribe = transcribe_audio(filename)
     return transcribe
 
 def get_text(id):
