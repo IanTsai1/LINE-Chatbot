@@ -1,5 +1,6 @@
 package com.line.practice.chat;
 
+import java.util.Base64;
 import java.util.List; 
 import java.lang.Thread;
 
@@ -23,8 +24,9 @@ import com.linecorp.bot.client.LineBlobClient;
 
 import java.util.concurrent.ExecutionException;
 import java.lang.InterruptedException;
-
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
@@ -112,32 +114,43 @@ public class EchoController{
 			RestTemplate restTemplate = new RestTemplate();
 			
 			messageContentResponse = client.getMessageContent(message.getId()).get();
-		    
-			//tmp save
-		    Path tempFile = Files.createTempFile("UserAudio", ".m4a");
-		    Files.copy(messageContentResponse.getStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
-		    String filename = tempFile.getFileName().toString();
-		    
+		    String audio_data = convertToBase64(messageContentResponse.getStream());
 			HttpHeaders filename_headers = new HttpHeaders();
 	    	filename_headers.setContentType(MediaType.TEXT_PLAIN);	
-	    	
-	    	HttpEntity<String> filename_requestEntity = new HttpEntity<>(filename, filename_headers);
+	    	HttpEntity<String> filename_requestEntity = new HttpEntity<>(audio_data, filename_headers);
 	    	String transcribed_audio = restTemplate.postForObject(audio_url, filename_requestEntity, String.class);
 	
 	    	lineMessagingClient.pushMessage(new PushMessage(id, new TextMessage(transcribed_audio),false));
+	    	
+	    	//tmp save
+	    	/*Path tempFile = Files.createTempFile("UserAudio", ".m4a");
+		    Files.copy(messageContentResponse.getStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+		    String filename = tempFile.getFileName().toString();*/
 		 
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-		    e.printStackTrace();
-		} catch (IOException e) {
 		    e.printStackTrace();
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}
     }
 	    
-    @EventMapping //runs when event is recorded
+	public static String convertToBase64(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+        }
+
+        byte[] bytes = outputStream.toByteArray();
+        byte[] encodedBytes = Base64.getEncoder().encode(bytes);
+        return new String(encodedBytes);
+    }
+	
+	@EventMapping //runs when event is recorded
     public void handleDefaultMessageEvent(Event event) {
         System.out.println("event: " + event);
     }

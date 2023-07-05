@@ -2,7 +2,11 @@ from flask import Flask,render_template, redirect,request
 import requests
 import wave
 import io
+import tempfile
+import base64
+
 from transcribe import transcribe_audio
+from sympy.core.tests import test_truediv
 #from builtins import id
 
 
@@ -17,12 +21,19 @@ def process_data():
 
 @app.route("/getAudio", methods=['POST']) 
 def process_audio():
-    filename = request.data.decode('utf-8')
-    print()
-    print("filename:" + filename)
-    print()
+    base64_data = request.get_data(as_text=True)  # Retrieve the request data as text
+    audio_bytes = base64.b64decode(base64_data)
+    filename = byte_to_m4a(audio_bytes)
     transcribe = transcribe_audio(filename)
     return transcribe
+
+def byte_to_m4a(byte_data):
+    with tempfile.NamedTemporaryFile(suffix='.m4a', delete=False) as temp_file:
+        temp_file.write(byte_data)
+        temp_file_path = temp_file.name
+    print("\n" + temp_file_path + "\n")
+    return temp_file_path
+
 
 def get_text(id):
     url = "http://localhost:8080/userdata/" + id
